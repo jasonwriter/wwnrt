@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+          on iOS devices-->
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+        <title>Wyoming Wildlife and Natural Resource Trust</title>
+
+        <link rel="stylesheet" href="http://js.arcgis.com/3.14/dijit/themes/claro/claro.css">
+        <link rel="stylesheet" href="http://js.arcgis.com/3.14/esri/css/esri.css">
+        <link rel="stylesheet" type="text/css" href="2.10/src/agsjs/css/agsjs.css">
+        <link rel="stylesheet" href="css/mycss.css">
+        <link rel="shortcut icon" href="">
+        <script  src="http://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+        <!--    place dojo config before arcgis dojo load-->
+        <script>
+            var djConfig = {
+                parseOnLoad: false,
+                packages: [{
+                        "name": "agsjs",
+                        "location": "/../2.10/src/agsjs"
+                    }]
+            };
+        </script>
+        <script src="http://js.arcgis.com/3.14/"></script>
+        <script src="js/nrtAddLayers.js"></script>
+        <script src="js/nrtFillSelects.js"></script>
+        <script src="js/nrtEditing.js"></script>
+        <script src="js/nrtGetDistrict.js"></script>
+        <script src="js/nrtUploadShapefile.js"></script>
+        <script src="js/nrtFilter.js"></script>
+        <script>
+            
+            //global variables
+            var loading, uName, uID, uRoles, adminEditor, currentDistrict;
+           
+            function showLoading() {
+                esri.show(loading);
+                map.disableMapNavigation();
+            }
+
+            function hideLoading() {
+                esri.hide(loading);
+                map.enableMapNavigation();
+
+            }
+            //get user info
+            
+            
+            if (getQueryStringByName("uname")) {
+                uName = getQueryStringByName("uname");
+            } else {
+                //set urole manually if testing locally
+                uName = "userFake1";
+            }
+            if (getQueryStringByName("uid")) {
+                uID = getQueryStringByName("uid");
+            } else {
+                uID = -100;
+            }
+            if (getQueryStringByName("roles")) {
+                uRoles = getQueryStringByName("roles");
+                if(uRoles.search("admineditor") !== -1){
+                    adminEditor = true;
+                }else{
+                    adminEditor = false;
+                }
+               // uRoles = getQueryStringByName("roles");
+                
+            } else {
+                //set urole manually if testing locally
+                uRoles = "authenticateduser,administrator,admineditor";
+                //uRoles = "authenticateduser,administrator";
+                if(uRoles.search("admineditor") !== -1){
+                    adminEditor = true;
+                }else{
+                    adminEditor = false;
+                }
+            }
+
+
+
+            function getQueryStringByName(name)
+            {
+                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+                var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                        results = regex.exec(location.search);
+                return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            }
+
+            function toggleEditTools() {
+                var div = document.getElementById("divEditTools");
+                if (div.style.display == "none")
+                {
+                    div.style.display = "";
+                    document.getElementById("btnEditTools").title = "Hide Legend/Layers";
+
+                } else
+                {
+                    div.style.display = "none";
+                    document.getElementById("btnEditTools").title = "Show Legend/Layers";
+                }
+            }
+            function toggleLegend() {
+                var div = document.getElementById("divLegend");
+                if (div.style.display == "none")
+                {
+                    div.style.display = "";
+                    document.getElementById("btnLayers").title = "Hide Legend/Layers";
+                } else
+                {
+                    div.style.display = "none";
+                    document.getElementById("btnLayers").title = "Show Legend/Layers";
+                }
+            }
+            function toggleNav() {
+                var div = document.getElementById("divNavigation");
+                if (div.style.display == "none")
+                {
+                    div.style.display = "";
+                    document.getElementById("btnNavigation").title = "Hide Navigation Tools";
+                } else
+                {
+                    div.style.display = "none";
+                    document.getElementById("btnNavigation").title = "Show Navigation Tools";
+                }
+            }
+
+            function changeBM()
+            {
+                var bm = map.getBasemap();
+                if (bm === "topo") {
+                    map.setBasemap("hybrid");
+                    document.getElementById("btnBasemap").title = "Switch to topo basemap";
+                    document.getElementById("btnBasemap").innerHTML = "Switch Base Map to Topo";
+                } else {
+                    map.setBasemap("topo");
+                    document.getElementById("btnBasemap").title = "Switch to hybrid basemap";
+                    document.getElementById("btnBasemap").innerHTML = "Switch Base Map to Satellite";
+                }
+            }
+
+            var map, popup, popupTemplate;
+            require([
+                "esri/map","dijit/Dialog",
+                "esri/config",
+                "dojo/dom",
+                "dojo/on",
+                "dojo/parser",
+                "dijit/layout/BorderContainer", "dijit/layout/ContentPane",
+                "dijit/form/Button", "dojo/domReady!"
+            ], function (Map, Dialog, esriConfig, dom, on, parser) {
+                //define loading variable after dom loaded
+                loading = dom.byId("loadingImg");
+
+                parser.parse();
+
+                //esriConfig.defaults.io.proxyUrl = "/proxy/";
+
+                // This service is for development and testing purposes only. We recommend that you create your own geometry service for use within your applications. 
+                esriConfig.defaults.geometryService = new esri.tasks.GeometryService("http://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer");
+                initFilteringSelects();
+
+
+                //popup = new Popup(null, domConstruct.create('div'));  
+
+                map = new Map("map", {
+                    basemap: "topo",
+                    center: [-107.65, 43.03],
+                    zoom: 8
+                    //infoWindow: popup
+                });
+                map.setInfoWindowOnClick(false);
+  
+
+  
+                map.on("load", addLayers);
+                map.on("layers-add-result", function () {
+                    fillFilter();
+                    initTOC();
+                    //define snapping options
+                    initSnapping();
+                });
+
+                on(map, "update-start", showLoading);
+                on(map, "update-end", function () {
+                    hideLoading();
+                    document.getElementById("loading").style.display = "none";
+                });
+            });
+        </script>
+    </head>
+    <body class="claro">
+        <div id='loading'></div>
+        
+        <div data-dojo-type="dijit/Dialog" data-dojo-id="myDialog" title="Info">
+            <div id="dialogContent">
+                
+            </div>
+        </div>
+
+        <div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="gutters:true, design:'headline'" style="width:100%;height:100%;">
+            <!--                <div data-dojo-type="dijit/layout/ContentPane"  id="header" data-dojo-props="region:'top'">
+                                <img id="headerImg" src="Images/header2.png"><h1>WWNRT Project Editor</h1>
+                                
+            
+                            </div>-->
+            <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">
+                 <button id="btnBasemap" title="Change Base Map" onClick="javascript: changeBM();">Switch Base Map To Satellite</button>
+                <img id="loadingImg" src="Images/loading.gif"/>
+
+                <!--                    <input id="btnBasemap" title="Change Base Map" onClick="javascript: changeBM();" type="image" value="Toggle Basemap" alt="Basemap button"/>-->
+            </div>
+            <div  id="rightPane" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'right'">
+                <div id="divTRSelect1">
+                   
+                    <input title="Show Edit Tools" class="button3" id="btnEditTools"  onClick="javascript: toggleEditTools();" type="image" src="Images/btnEditTools.png" alt="Edit Tools button"/>
+                    <input title="Show Navigation Tools" class="button3" id="btnNavigation"  onClick="javascript: toggleNav();" type="image" src="Images/btnNavImg1.png" alt="navigation button"/>
+                    <input title="Show Layer Legend" class="button3" id="btnLayers"  onClick="javascript: toggleLegend();" type="image" src="Images/btnLayers.png" alt="Legend button"/>
+                    <!--                    <input title="Change Base Map" class="button3" id="btnBasemap"  onClick="javascript: changeBM();" type="image" src="Images/btnBasemap.png" alt="Basemap button"/>-->
+                </div>
+                <div id="divLegend" class="borderBox">
+                    <label class="boxText">Legend</label>
+                    <div id="divTOC"></div>
+
+                    <div id="divFilter" class="borderBox">
+                        <label class="boxText">Filter By Year Funded</label>
+                        <table>
+                            <tr>
+                                <td>
+                                    <select id="selYear" onchange="filterProjects(this.value)"></select>
+                                </td>
+                                <td>
+                                    <input title="Clear Filter (Show all projects)" class="button1" id="btnClearFilter"  onClick="javascript: clearFilter();" type="image" src="Images/clearFilter.png" alt="ClearFilter"/>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                    </div>
+
+
+
+                </div>
+                <div id="divNavigation" style="display: none;" class="borderBox">
+                    <label class="boxText">Navigation</label>
+                    <h5>Zoom To Township Range</h5>
+                    <div id="selectTR"></div>
+                    <h5>Zoom To County</h5>
+                    <div id="selectCounty"></div>
+                    <h5>Zoom To City/Town</h5>
+                    <div id="selectCity"></div>
+                </div>
+                <div id="divEditTools" style="display: none;" class="borderBox">
+                    <label class="boxText">Editing Tools</label>
+                    <div style="text-align: center;">
+                        <div id="divUploadStuff">
+                                <button id="btnUploadSF" class="button" title="Upload zipped shapefile" onClick="javascript: document.getElementById('divUploadStuff').style.borderColor = '#B98CBC';document.getElementById('uploadForm').style.display = '';">Upload Project Shapefile</button><br>
+                            <form  enctype="multipart/form-data" method="post" id="uploadForm" style="display:none;">
+                                <div class="field">
+                                    <label class="file-upload">
+                                        <input  type="file" name="file" id="inFile" />
+                                    </label>
+                                </div>
+                            </form>
+                        </div>
+                        <div id="divEditStuff">
+                            <button id="btnEdit" class="button" title="Start Editing Projects" onClick="javascript: switchEdit();">Start Editing</button>
+                            <div id='divEditTemplateContainer'>
+                                <div id="editorDiv" style="display: none !important;"></div> 
+                                <div id="templateDiv" style="display: none !important;"></div> 
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <div id="divEditTips">
+                        <p><b>EDITING INSTRUCTIONS</b></p>
+                        <p>*Click 'Start Editing' button to begin editing, 'Stop Editing' to Stop</p>
+                        <ul style="padding-left: 10px; list-style-type:circle">
+                            <li><b>Add Project</b> - Click on red template icon above, click on map to draw project boundary. Double click to finish; hold down Alt key to snap to section and project features. Fill in Attributes and click on map to save edits. Disable Add Project by clicking on highlighted symbol again.</li>
+                            <li><b>Edit Project Attributes</b> - click on project once. Make attribute edits. Click map to save edits and close attribute box.</li>
+                            <li><b>Edit Project Geometry</b> - click on project once to open attributes then again to enable vertex editing (Alt to snap)</li>
+                        </ul>
+
+                    </div>
+
+
+
+                </div>
+            </div>
+            <!--ATTRIBUTE DIALOG***********-->
+<!--            <div data-dojo-type="dijit/Dialog" id="diaProjectAtt"   title="Add Attributes for this Project" style="overflow:hidden; padding-top: 20px; width:400px; text-align: left;">
+                <p><i>Project Name: </i><input class="input" id="inProjectName"><br></p>
+                <p><i>Project Date: </i><input class="input" id="inProjectDate"><br></p>
+                <p><i>Project Sponsor: </i><select id='inProjectSponsor' class='input'>
+                        <option value='BHNF'>Big Horn National Forest</option>
+                        <option value='BlkHNF'>Black Hills National Forest</option>
+                        <option value='BIA'>Bureau of Indian Affairs</option>
+                        <option value='BLM'>Bureau of Land Management</option>
+                        <option value='Casper'>City of Casper</option>
+                        <option value='Cheyenne'>City of Cheyenne</option>
+                        <option value='Gillette'>City of Gillette</option>
+                        <option value='Green River'>City of Green River</option>
+                        <option value='City'>City of Green River</option>
+                        <option value='Sheridan'>City of Sheridan</option>
+                        <option value='CWP'>Converse Weed and Pest</option>
+                        <option value='SCI'>Cooperative Sagebrush Initiative</option>
+                        <option value='DSA'>Downtown Sheridan Association</option>
+                        <option value='DU'>Ducks Unlimited</option>
+                        <option value='FOAL'>Friends of a Legacy</option>
+                        <option value='GWP'>Goshen Weed and Pest</option>
+                        <option value='GRVLT'>Green River Valley Land Trust</option>
+                        <option value='GOR'>Guardians of the Range</option>
+                        <option value='HSCD'>Hot Springs Conservation District</option>
+                        <option value='HSCD'>Hot Springs Conservation District</option>
+                        <option value='HSCWP'>Hot Springs County Weed and Pest</option>
+                        <option value='IKGA'>Inyan Kara Grazing Association</option>
+                        <option value='JHLT'>Jackson Hole Land Trust</option>
+                        <option value='JHWF'>Jackson Hole Wildlife Foundation</option>
+                        <option value='LDCD'>Lake DeSmet Conservation District</option>
+                        <option value='LBC'>Laramie Beautification Committee</option>
+                        <option value='LCCD'>Laramie County Conservation District</option>
+                        <option value='LWP'>Lincoln Weed and Pest</option>
+                        <option value='LSRCD'>Little Snake River Conservation District</option>
+                        <option value='MBCD'>Medicine Bow Conservation District</option>
+                        <option value='MTU'>Michigan Tech University</option>
+                        <option value='MDF'>Mule Deer Foundation</option>
+                        <option value='NWTF'>Nation Wild Turkey Foundation</option>
+                        <option value='NCCD'>Niobrara Conservation District</option>
+                        <option value='NEW Bird'>North East Wyoming Bird Rescue</option>
+                        <option value='PCWP'>Park County Weed and Pest</option>
+                        <option value='PF'>Pheasants Forever</option>
+                        <option value='PCNRD'>Platte County Natural Resource District</option>
+                        <option value='PCWP'>Platte County Weed and Pest</option>
+                        <option value='PAA'>Popo Agie Anglers</option>
+                        <option value='PACD'>Popo Agie Conservation District</option>
+                        <option value='SCFCD'>Powell Clarks Fork Conservation District</option>
+                        <option value='RMBO'>Rocky Mountain Bird Observatory</option>
+                        <option value='RMEF'>Rocky Mountain Elk Foundation</option>
+                        <option value='SERCD'>Saratoga Encampment Rawlins Conservation District</option>
+                        <option value='SCLT'>Sheridan Community Land Trust</option>
+                        <option value='SCCD'>Sheridan County Conservation District</option>
+                        <option value='SCD'>Shoshone Conservation District</option>
+                        <option value='SNF'>Shoshone National Forest</option>
+                        <option value='SBHCD'>South Big Horn Conservation District</option>
+                        <option value='SCCD'>Sublette County Conservation District</option>
+                        <option value='TCD'>Teton Conservation District</option>
+                        <option value='TCWPD'>Teton County Weed and Pest District</option>
+                        <option value='TSS'>Teton Science School</option>
+                        <option value='TCF'>The Conservation Fund</option>
+                        <option value='TNC'>The Nature Conservancy</option>
+                        <option value='TBGPEA'>Thunder Basin Grasslands Prairie Ecosystem Association</option>
+                        <option value='TU'>Trout Unlimited</option>
+                        <option value='UCD'>Uinta Conservation District</option>
+                        <option value='Uinta'>Uinta County</option>
+                        <option value='UCCD'>Uinta County Conservation District</option>
+                        <option value='USFS'>United States Forest Service</option>
+                        <option value='UW'>University of Wyoming</option>
+                        <option value='UGRTU'>Upper Green River Trout Unlimited</option>
+                        <option value='WCD'>Washakie Conservation District</option>
+                        <option value='WCCD'>Washakie County Conservation District</option>
+                        <option value='WWRCD'>Western Wyoming Resource Conservation and Development</option>
+                        <option value='WCNRD'>Weston County Natural Resource District</option>
+                        <option value='WGFD'>Wyoming Game and Fish Department</option>
+                        <option value='WLT'>Wyoming Land Trust</option>
+                        <option value='WSGALT'>Wyoming Stock Growers Agricultural Land Trust</option>
+                        <option value='WWS'>Wyoming Wetlands Society</option>
+                        <option value='YMCA'>Young Men's Christian Association</option>
+
+                    </select>
+                                    <p><i>Project Sponsor: </i><input class="input" id="inProjectSponsor"><br></p>
+                <p><i>Project District: </i><input class="input" id="inProjectDistrict"></p>
+                <button id='btnNextAtt'>Next</button>
+                <button id="btnSaveProject">Save Attributes</button>
+            </div>-->
+            <!--NAVIGATION DIALOG***********-->
+            <div data-dojo-type="dijit/Dialog" id="diaNavigation"   style="overflow:hidden; padding-top: 20px; width:220px; text-align: center;">
+
+            </div>
+        </div>
+
+    </body>
+</html>

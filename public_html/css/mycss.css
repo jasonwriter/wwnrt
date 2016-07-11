@@ -1,0 +1,306 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0; 
+    padding: 0;
+    overflow:hidden;
+}
+#header {
+    position: absolute;
+    border: solid 2px #444;
+    background: lightgoldenrodyellow;
+    color:#444;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    font-family: sans-serif;
+    font-size: 1.1em
+}
+#map {
+    padding: 1px;
+    border:solid 2px #444;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    width: 100%;
+}
+#rightPane {
+    position: absolute;
+    right: 0px;
+    -moz-border-radius: 4px;
+    border-radius: 4px; 
+    padding: 0;
+    width:250px;
+    border: solid 2px #444; 
+    right: 0px;
+    z-index: 100;
+    height: 100%;
+    top: 112px;
+    background-color: white;
+
+
+}
+.templatePicker {
+    border: solid 2px #444;
+}
+#headerImg {
+    float: left;
+}
+h1 {
+    float: left;
+    margin-left: 50px;
+    color: midnightblue;
+}
+#divTRSelect {
+    float: right;
+    padding-top: 10px;
+    padding-right: 20px;
+}
+#divTRSelect1 {
+
+    padding-top: 10px;
+
+text-align: center;}
+.button {
+    height: 25px;
+    border: 2px solid;
+    border-radius: 5px;
+    background-color: lightgoldenrodyellow;
+    margin: 5px;
+    /* z-index: 10000; */
+}
+.button:hover {
+   background: lightgrey;
+   }
+#btnBasemap {
+    width: 200px;
+    height: 25px;
+    border: 3px solid;
+    border-radius: 5px;
+    background-color: #D7F5E2;
+    margin-bottom: 5px;
+    position: absolute;
+    z-index: 1;
+    right: 2px;
+    top: 2px;
+}
+#btnBasemap:hover {
+
+   background: lightgrey;
+
+   }
+.button3 {
+    /* position: relative; */
+    background-color: #FFF;
+    /* cursor: pointer; */
+    border: 3px solid;
+    width: 50px;
+    height: 50px;
+    right: -0px;
+    margin: 0px;
+    border-radius: 10px;
+    background-color: white;
+}
+.button3:hover {
+
+   background: lightgrey;
+
+   }
+   
+   .button4 {
+    /* position: relative; */
+    background-color: #FFF;
+    /* cursor: pointer; */
+    border: 3px solid;
+    width: 20px;
+    height: 20px;
+    right: -0px;
+    margin: 0px;
+    border-radius: 10px;
+    background-color: white;
+}
+.button4:hover {
+
+   background: lightgrey;
+
+   }
+.button1 {
+    /* position: relative; */
+    background-color: #FFF;
+    /* cursor: pointer; */
+    border: 2px solid;
+    width: 20px;
+    height: 20px;
+    /* right: -0px; */
+    /* margin: 0px; */
+    border-radius: 5px;
+    background-color: white;
+    float: left;
+    display: block;
+}
+.button1:hover {
+
+   background: lightgrey;
+
+   }
+.borderBox {
+    border: 1px solid #B98CBC;
+    padding: 10px;
+    margin: 3px;
+    margin-top: 12px;
+}
+
+.borderBoxInner {
+    border: 1px solid white;
+    padding: 3px;
+    margin-left: -2px;
+    margin-right: -2px;
+    margin-bottom: 5px;
+}
+.boxText {
+    position: relative;
+    top: -20px;
+    background-color: white;
+    color: #B98CBC;
+    padding: 2px;
+    font-weight: bold;
+    font-style: italic;
+}
+.boxTextInner {
+    display: none;
+    position: relative;
+    top: -20px;
+    background-color: white;
+    color: #B98CBC;
+    padding: 2px;
+    font-weight: bold;
+    font-style: italic;
+}
+h5 {
+    margin: 0;
+    paddding: 0;
+    font-size: .9em;
+    color: gray;
+}
+.input {
+    float: right;
+    width: 270px;
+}
+#divEditTips {
+    color: #925409;
+    font-size: 14px;
+}
+
+.templatePicker {
+    border-color: lightslategray;
+    /* margin: auto 0px; */
+    margin-left: auto;
+    margin-right: auto;
+
+        border: none !important;
+        height: 50% !important;
+    
+}
+.templatePicker .itemLabel{
+    display:none;
+}
+.templatePicker .groupLabel{ 
+    display:none;
+}
+.templatePicker .itemSymbol{
+    /* padding: 0px; */
+    /* margin: 0px; */
+    width: 30px;
+    height: 30px;
+}
+
+
+#divEditTemplateContainer {
+    padding-left: 0px;
+    padding-right: 30px;
+    margin-top: 10px;
+}
+#page {
+    display: none;
+}
+#loading {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(30,119,109, .95);
+    background-image: url("http://i.stack.imgur.com/MnyxU.gif");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+#loadingImg {
+    position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto; /* presto! */
+  z-index: 100;
+}
+.esriPopup .titlePane {
+    background-color: #1e776d;
+    color: #FFFFFF;
+    line-height: 20px;
+    padding-left: 6px;
+    border-radius: 5px 5px 0px 0px;
+    -webkit-border-radius: 5px 5px 0px 0px;
+    cursor: default;
+}
+
+#divUploadStuff {
+    padding: 5px;
+    border: 1px solid white;
+    margin-left: -2px;
+    margin-right: -2px;
+}
+#divEditStuff {
+    padding-top: 5px;
+    border: 1px solid white;
+    margin-left: -2px;
+    margin-right: -2px;
+    margin-bottom: -10px;
+    margin-top: 5px;
+}
+.esriPopup .contentPane {
+/* height: 130px; */
+}
+.claro .dijitButton .dijitButtonNode, .claro .dijitDropDownButton .dijitButtonNode, .claro .dijitComboButton .dijitButtonNode, .claro .dijitToggleButton .dijitButtonNode {
+    padding: 2px 4px 2px 4px;
+}
+.esriPopup .esriPopupWrapper {
+
+   
+}
+.closeButton {
+    float: right;
+}
+
+
+
+/*.esriPopup .titleButton.close {
+   
+}*/
+.esriPopup .titleButton.maximize {
+    display: none;
+}
+.removeX {
+    display: none;
+}
+#attMsg {
+    font-weight: bold;
+    font-style: italic;
+    color: green;
+    position: relative;
+    top: -108px;
+}
+#selYear {
+/*    float: left;
+    margin-right: 20px;*/
+    width: 100px;
+}
